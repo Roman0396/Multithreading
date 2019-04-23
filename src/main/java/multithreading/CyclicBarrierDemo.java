@@ -1,5 +1,7 @@
 package multithreading;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
@@ -7,32 +9,30 @@ import java.util.concurrent.CyclicBarrier;
  * run several threads at the same time
  */
 public class CyclicBarrierDemo {
+
     private static final Integer THREAD_QUANTITY = 9;
 
     private static final Integer THREADS_TO_RUN_AT_THE_SAME_TIME = 3;
 
-    private static final CyclicBarrier BARRIER = new CyclicBarrier(THREADS_TO_RUN_AT_THE_SAME_TIME, new StartTask());
+    private static final CyclicBarrier BARRIER = new CyclicBarrier(THREADS_TO_RUN_AT_THE_SAME_TIME);
+    private static final List<Thread> threads = new ArrayList<Thread>();
 
     public static void main(String[] args) throws InterruptedException {
         for (int i = 0; i < THREAD_QUANTITY; i++) {
-            new Thread(new SimpleThread("thread" + i)).start();
-            Thread.sleep(100);
+            Thread currentThread = new SimpleThread("thread " + i);
+            threads.add(currentThread);
+            currentThread.start();
+            Thread.sleep(1000);//interval between runs
         }
-    }
 
-    public static class StartTask implements Runnable {
-
-        public void run() {
-            try {
-                Thread.sleep(100);
-                System.out.println("run threads:");
-            } catch (InterruptedException e) {
-            }
+        for (int i = 0; i < THREAD_QUANTITY; i++) {
+            Thread currentThread = threads.get(i);
+            currentThread.join();
         }
+        System.out.println("all threads are finished");
     }
 
     public static class SimpleThread extends Thread {
-
         SimpleThread(String name) {
             super(name);
         }
@@ -41,12 +41,13 @@ public class CyclicBarrierDemo {
         public void run() {
             try {
                 BARRIER.await();
+                System.out.println(getName() + " starts at: " + System.currentTimeMillis());
+                Thread.sleep(5000); // execution
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } catch (BrokenBarrierException e) {
                 e.printStackTrace();
             }
-            System.out.printf(getName() + " starts at: " + System.currentTimeMillis() + "\n");
         }
     }
 }
